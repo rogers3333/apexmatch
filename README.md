@@ -82,7 +82,7 @@
 
 ---
 
-## 6. 文档与代码规范达标标准
+## 6. 文档与代码规范标准
 - [ ] 代码符合Java/Rust语言规范：
     - Java代码通过CheckStyle检查，无警告
     - Rust代码通过`cargo clippy`检查，无警告
