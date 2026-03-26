@@ -1,0 +1,16 @@
+# Maven
+**/target/
+**/pom.xml.tag
+**/.flattened-pom.xml
+
+# Rust
+**/target/
+**/*.rs.bk
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+.vscode/
