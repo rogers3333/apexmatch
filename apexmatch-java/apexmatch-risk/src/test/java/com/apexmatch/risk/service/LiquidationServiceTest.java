@@ -3,6 +3,7 @@ package com.apexmatch.risk.service;
 import com.apexmatch.account.service.impl.AccountServiceImpl;
 import com.apexmatch.account.service.impl.PositionServiceImpl;
 import com.apexmatch.common.enums.OrderSide;
+import com.apexmatch.risk.service.impl.AdlServiceImpl;
 import com.apexmatch.risk.service.impl.InsuranceFundServiceImpl;
 import com.apexmatch.risk.service.impl.LiquidationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,13 +19,15 @@ class LiquidationServiceTest {
     private AccountServiceImpl accountService;
     private PositionServiceImpl positionService;
     private InsuranceFundServiceImpl insuranceFundService;
+    private AdlServiceImpl adlService;
 
     @BeforeEach
     void setUp() {
         accountService = new AccountServiceImpl();
         positionService = new PositionServiceImpl();
         insuranceFundService = new InsuranceFundServiceImpl();
-        liquidationService = new LiquidationServiceImpl(accountService, positionService, insuranceFundService);
+        adlService = new AdlServiceImpl(positionService, accountService, insuranceFundService);
+        liquidationService = new LiquidationServiceImpl(accountService, positionService, insuranceFundService, adlService);
     }
 
     /** 保证金率充足时不触发强平 */

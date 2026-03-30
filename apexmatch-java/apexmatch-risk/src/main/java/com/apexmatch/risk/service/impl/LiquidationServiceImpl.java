@@ -3,6 +3,7 @@ package com.apexmatch.risk.service.impl;
 import com.apexmatch.account.service.AccountService;
 import com.apexmatch.account.service.PositionService;
 import com.apexmatch.common.entity.Position;
+import com.apexmatch.risk.service.AdlService;
 import com.apexmatch.risk.service.InsuranceFundService;
 import com.apexmatch.risk.service.LiquidationService;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class LiquidationServiceImpl implements LiquidationService {
     private final AccountService accountService;
     private final PositionService positionService;
     private final InsuranceFundService insuranceFundService;
+    private final AdlService adlService;
 
     @Override
     public boolean checkLiquidation(long userId, String symbol, BigDecimal markPrice) {
@@ -104,6 +106,12 @@ public class LiquidationServiceImpl implements LiquidationService {
                 insuranceFundService.coverLoss(DEFAULT_CURRENCY, remainingLoss, userId, symbol);
                 log.warn("强平亏损超出余额，保险基金兜底 userId={} symbol={} remainingLoss={}",
                         userId, symbol, remainingLoss);
+
+                // 检查是否需要触发 ADL
+                if (adlService.shouldTriggerAdl(DEFAULT_CURRENCY)) {
+                    BigDecimal coveredByAdl = adlService.executeAdl(symbol, remainingLoss, markPrice, DEFAULT_CURRENCY);
+                    log.warn("保险基金不足，触发 ADL symbol={} coveredByAdl={}", symbol, coveredByAdl);
+                }
             }
         } else if (pnl.signum() > 0) {
             // 盈利，结算给用户
