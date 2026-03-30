@@ -2,6 +2,7 @@ package com.apexmatch.risk.service.impl;
 
 import com.apexmatch.account.service.PositionService;
 import com.apexmatch.common.entity.Position;
+import com.apexmatch.common.enums.OrderSide;
 import com.apexmatch.risk.service.SlTpMonitorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,7 @@ import java.math.BigDecimal;
  * 1. 获取用户持仓
  * 2. 检查持仓是否设置了止损价/止盈价
  * 3. 根据最新价格判断是否触发
- * 4. 触发后返回 true，由调用方生成市价平仓订单
+ * 4. 触发后返回平仓信息，由调用方生成市价平仓订单
  *
  * @author luka
  * @since 2025-03-30
@@ -27,12 +28,12 @@ public class SlTpMonitorServiceImpl implements SlTpMonitorService {
     private final PositionService positionService;
 
     @Override
-    public void checkAndTrigger(long userId, String symbol, BigDecimal lastPrice) {
+    public TriggerResult checkAndTrigger(long userId, String symbol, BigDecimal lastPrice) {
         Position pos = positionService.getOrCreatePosition(userId, symbol);
 
         // 无持仓，无需检查
         if (pos.getQuantity().signum() == 0) {
-            return;
+            return null;
         }
 
         boolean isLong = pos.getQuantity().signum() > 0;
@@ -48,9 +49,10 @@ public class SlTpMonitorServiceImpl implements SlTpMonitorService {
                 // 清除 SL/TP 价格，防止重复触发
                 pos.setStopLossPrice(null);
                 pos.setTakeProfitPrice(null);
-                // TODO: 调用撮合引擎提交市价平仓单
-                // 需要在调用方（OrderEventHandler）中实现
-                return;
+
+                // 返回平仓信息：多头平仓用 SELL，空头平仓用 BUY
+                OrderSide closeSide = isLong ? OrderSide.SELL : OrderSide.BUY;
+                return new TriggerResult(userId, symbol, pos.getQuantity().abs(), closeSide, "STOP_LOSS");
             }
         }
 
@@ -63,9 +65,13 @@ public class SlTpMonitorServiceImpl implements SlTpMonitorService {
                 // 清除 SL/TP 价格，防止重复触发
                 pos.setStopLossPrice(null);
                 pos.setTakeProfitPrice(null);
-                // TODO: 调用撮合引擎提交市价平仓单
-                return;
+
+                // 返回平仓信息
+                OrderSide closeSide = isLong ? OrderSide.SELL : OrderSide.BUY;
+                return new TriggerResult(userId, symbol, pos.getQuantity().abs(), closeSide, "TAKE_PROFIT");
             }
         }
+
+        return null;
     }
 }

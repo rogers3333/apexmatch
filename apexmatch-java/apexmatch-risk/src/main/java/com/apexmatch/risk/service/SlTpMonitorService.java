@@ -1,5 +1,9 @@
 package com.apexmatch.risk.service;
 
+import com.apexmatch.common.enums.OrderSide;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
 import java.math.BigDecimal;
 
 /**
@@ -17,6 +21,17 @@ public interface SlTpMonitorService {
      * @param userId    用户ID
      * @param symbol    交易对
      * @param lastPrice 最新成交价
+     * @return 触发结果，null 表示未触发
      */
-    void checkAndTrigger(long userId, String symbol, BigDecimal lastPrice);
+    TriggerResult checkAndTrigger(long userId, String symbol, BigDecimal lastPrice);
+
+    @Data
+    @AllArgsConstructor
+    class TriggerResult {
+        private long userId;
+        private String symbol;
+        private BigDecimal quantity;
+        private OrderSide closeSide;
+        private String triggerType;
+    }
 }

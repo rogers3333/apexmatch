@@ -22,11 +22,11 @@ class SlTpMonitorServiceTest {
         slTpMonitorService = new SlTpMonitorServiceImpl(positionService);
     }
 
-    /** 无持仓时 checkAndTrigger 不抛异常 */
+    /** 无持仓时 checkAndTrigger 返回 null */
     @Test
     void noPositionDoesNothing() {
-        assertThatNoException().isThrownBy(
-                () -> slTpMonitorService.checkAndTrigger(1L, "BTC-USDT", new BigDecimal("50000")));
+        SlTpMonitorService.TriggerResult result = slTpMonitorService.checkAndTrigger(1L, "BTC-USDT", new BigDecimal("50000"));
+        assertThat(result).isNull();
     }
 
     /** 多仓：价格跌破止损价时触发止损，清除 SL/TP */
@@ -40,7 +40,13 @@ class SlTpMonitorServiceTest {
         pos.setTakeProfitPrice(new BigDecimal("55000"));
 
         // 价格跌破止损价
-        slTpMonitorService.checkAndTrigger(1L, "BTC-USDT", new BigDecimal("47999"));
+        SlTpMonitorService.TriggerResult result = slTpMonitorService.checkAndTrigger(1L, "BTC-USDT", new BigDecimal("47999"));
+
+        // 应返回平仓信息
+        assertThat(result).isNotNull();
+        assertThat(result.getTriggerType()).isEqualTo("STOP_LOSS");
+        assertThat(result.getCloseSide()).isEqualTo(OrderSide.SELL);
+        assertThat(result.getQuantity()).isEqualByComparingTo(new BigDecimal("1"));
 
         // SL/TP 应被清除（触发一个后另一个自动撤销）
         assertThat(pos.getStopLossPrice()).isNull();
@@ -57,8 +63,9 @@ class SlTpMonitorServiceTest {
         pos.setStopLossPrice(new BigDecimal("48000"));
 
         // 价格高于止损价，不触发
-        slTpMonitorService.checkAndTrigger(1L, "BTC-USDT", new BigDecimal("49000"));
+        SlTpMonitorService.TriggerResult result = slTpMonitorService.checkAndTrigger(1L, "BTC-USDT", new BigDecimal("49000"));
 
+        assertThat(result).isNull();
         assertThat(pos.getStopLossPrice()).isEqualByComparingTo(new BigDecimal("48000"));
     }
 
@@ -73,8 +80,11 @@ class SlTpMonitorServiceTest {
         pos.setTakeProfitPrice(new BigDecimal("55000"));
 
         // 价格涨破止盈价
-        slTpMonitorService.checkAndTrigger(1L, "BTC-USDT", new BigDecimal("55001"));
+        SlTpMonitorService.TriggerResult result = slTpMonitorService.checkAndTrigger(1L, "BTC-USDT", new BigDecimal("55001"));
 
+        assertThat(result).isNotNull();
+        assertThat(result.getTriggerType()).isEqualTo("TAKE_PROFIT");
+        assertThat(result.getCloseSide()).isEqualTo(OrderSide.SELL);
         assertThat(pos.getStopLossPrice()).isNull();
         assertThat(pos.getTakeProfitPrice()).isNull();
     }
@@ -89,8 +99,11 @@ class SlTpMonitorServiceTest {
         pos.setStopLossPrice(new BigDecimal("53000"));
 
         // 价格涨破止损价
-        slTpMonitorService.checkAndTrigger(1L, "BTC-USDT", new BigDecimal("53001"));
+        SlTpMonitorService.TriggerResult result = slTpMonitorService.checkAndTrigger(1L, "BTC-USDT", new BigDecimal("53001"));
 
+        assertThat(result).isNotNull();
+        assertThat(result.getTriggerType()).isEqualTo("STOP_LOSS");
+        assertThat(result.getCloseSide()).isEqualTo(OrderSide.BUY);
         assertThat(pos.getStopLossPrice()).isNull();
     }
 
@@ -104,8 +117,11 @@ class SlTpMonitorServiceTest {
         pos.setTakeProfitPrice(new BigDecimal("46000"));
 
         // 价格跌破止盈价
-        slTpMonitorService.checkAndTrigger(1L, "BTC-USDT", new BigDecimal("45999"));
+        SlTpMonitorService.TriggerResult result = slTpMonitorService.checkAndTrigger(1L, "BTC-USDT", new BigDecimal("45999"));
 
+        assertThat(result).isNotNull();
+        assertThat(result.getTriggerType()).isEqualTo("TAKE_PROFIT");
+        assertThat(result.getCloseSide()).isEqualTo(OrderSide.BUY);
         assertThat(pos.getTakeProfitPrice()).isNull();
     }
 
@@ -118,8 +134,10 @@ class SlTpMonitorServiceTest {
         Position pos = positionService.getOrCreatePosition(1L, "BTC-USDT");
         pos.setStopLossPrice(new BigDecimal("48000"));
 
-        slTpMonitorService.checkAndTrigger(1L, "BTC-USDT", new BigDecimal("48000"));
+        SlTpMonitorService.TriggerResult result = slTpMonitorService.checkAndTrigger(1L, "BTC-USDT", new BigDecimal("48000"));
 
+        assertThat(result).isNotNull();
+        assertThat(result.getTriggerType()).isEqualTo("STOP_LOSS");
         assertThat(pos.getStopLossPrice()).isNull();
     }
 
@@ -129,7 +147,7 @@ class SlTpMonitorServiceTest {
         positionService.updateOnTrade(1L, "BTC-USDT", OrderSide.BUY,
                 new BigDecimal("1"), new BigDecimal("50000"), 10);
 
-        assertThatNoException().isThrownBy(
-                () -> slTpMonitorService.checkAndTrigger(1L, "BTC-USDT", new BigDecimal("45000")));
+        SlTpMonitorService.TriggerResult result = slTpMonitorService.checkAndTrigger(1L, "BTC-USDT", new BigDecimal("45000"));
+        assertThat(result).isNull();
     }
 }
