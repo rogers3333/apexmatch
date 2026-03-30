@@ -5,6 +5,35 @@ spring:
   application:
     name: apexmatch-gateway
 
+  # =============================================
+  # 数据库配置（MySQL）
+  # =============================================
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:apexmatch}?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC&useSSL=false
+    username: ${DB_USER:root}
+    password: ${DB_PASS:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 30000
+      connection-timeout: 30000
+
+  # =============================================
+  # Redis 配置
+  # =============================================
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+
 # =============================================
 # 撮合引擎配置
 # =============================================
@@ -20,6 +49,14 @@ apexmatch:
     symbols:
       - BTC-USDT
       - ETH-USDT
+  # 限流配置
+  rate-limit:
+    max-tokens: 1000
+    refill-per-second: 500
+  # 熔断配置
+  circuit-breaker:
+    failure-threshold: 10
+    cooldown-ms: 30000
 
 springdoc:
   api-docs:
