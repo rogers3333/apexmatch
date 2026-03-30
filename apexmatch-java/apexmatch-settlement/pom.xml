@@ -45,5 +45,10 @@
             <version>${assertj.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- Spring Context for @Component, @Scheduled -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
     </dependencies>
 </project>
