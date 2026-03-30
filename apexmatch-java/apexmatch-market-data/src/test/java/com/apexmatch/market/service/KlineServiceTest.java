@@ -95,4 +95,46 @@ class KlineServiceTest {
                 .tradeTime(time)
                 .build();
     }
+
+    /** 无成交时 getTicker24h 返回全零统计 */
+    @Test
+    void ticker24hEmptyWhenNoTrades() {
+        KlineService.Ticker24h ticker = klineService.getTicker24h("BTC-USDT");
+        assertThat(ticker).isNotNull();
+        assertThat(ticker.symbol()).isEqualTo("BTC-USDT");
+        assertThat(ticker.lastPrice()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(ticker.volume()).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    /** 有成交时 getTicker24h 返回正确统计 */
+    @Test
+    void ticker24hAggregatesCorrectly() {
+        long now = System.currentTimeMillis();
+        // 模拟最近 3 分钟的成交
+        klineService.onTrade(makeTrade(1L, "50000", "1", now - 120_000));
+        klineService.onTrade(makeTrade(2L, "52000", "2", now - 60_000));
+        klineService.onTrade(makeTrade(3L, "48000", "0.5", now - 30_000));
+
+        KlineService.Ticker24h ticker = klineService.getTicker24h("BTC-USDT");
+        assertThat(ticker.highPrice()).isEqualByComparingTo(new BigDecimal("52000"));
+        assertThat(ticker.lowPrice()).isEqualByComparingTo(new BigDecimal("48000"));
+        // 最新价 = 最后一笔成交价
+        assertThat(ticker.lastPrice()).isEqualByComparingTo(new BigDecimal("48000"));
+        // 成交量 = 1 + 2 + 0.5 = 3.5
+        assertThat(ticker.volume()).isEqualByComparingTo(new BigDecimal("3.5"));
+    }
+
+    /** 涨跌幅计算正确 */
+    @Test
+    void ticker24hPriceChangePercent() {
+        long now = System.currentTimeMillis();
+        klineService.onTrade(makeTrade(1L, "50000", "1", now - 120_000));
+        klineService.onTrade(makeTrade(2L, "55000", "1", now - 30_000));
+
+        KlineService.Ticker24h ticker = klineService.getTicker24h("BTC-USDT");
+        // priceChange = 55000 - 50000 = 5000
+        assertThat(ticker.priceChange()).isEqualByComparingTo(new BigDecimal("5000"));
+        // priceChangePercent = 5000/50000 * 100 = 10%
+        assertThat(ticker.priceChangePercent()).isEqualByComparingTo(new BigDecimal("10.00000000"));
+    }
 }

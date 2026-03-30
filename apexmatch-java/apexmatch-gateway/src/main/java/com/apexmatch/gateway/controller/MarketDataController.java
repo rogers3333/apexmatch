@@ -41,4 +41,10 @@ public class MarketDataController {
                                                @RequestParam(defaultValue = "100") int limit) {
         return ApiResponse.success(klineService.getKlines(symbol, interval, limit));
     }
+
+    @GetMapping("/ticker/{symbol}")
+    @Operation(summary = "24h 行情统计", description = "获取指定交易对的 24h 成交量、涨跌幅等统计数据")
+    public ApiResponse<KlineService.Ticker24h> getTicker24h(@PathVariable String symbol) {
+        return ApiResponse.success(klineService.getTicker24h(symbol));
+    }
 }

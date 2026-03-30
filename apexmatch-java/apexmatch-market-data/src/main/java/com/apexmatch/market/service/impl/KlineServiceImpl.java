@@ -102,4 +102,50 @@ public class KlineServiceImpl implements KlineService {
             default -> throw new IllegalArgumentException("Unsupported interval: " + interval);
         };
     }
+
+    @Override
+    public Ticker24h getTicker24h(String symbol) {
+        long now = System.currentTimeMillis();
+        long since = now - 86_400_000L; // 24h 前
+
+        // 从 1m K 线聚合出 24h 统计数据
+        List<Kline> klines1m = getKlines(symbol, "1m", 1440); // 最多 1440 根 1m 线
+        if (klines1m.isEmpty()) {
+            return new Ticker24h(symbol, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
+                    BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, since, now);
+        }
+
+        BigDecimal openPrice = null;
+        BigDecimal closePrice = BigDecimal.ZERO;
+        BigDecimal highPrice = BigDecimal.ZERO;
+        BigDecimal lowPrice = null;
+        BigDecimal volume = BigDecimal.ZERO;
+        BigDecimal quoteVolume = BigDecimal.ZERO;
+        long openTime = now;
+
+        for (Kline kline : klines1m) {
+            if (kline.getOpenTime() < since) continue;
+
+            if (openPrice == null) {
+                openPrice = kline.getOpen();
+                openTime = kline.getOpenTime();
+            }
+            closePrice = kline.getClose();
+            highPrice = highPrice.max(kline.getHigh());
+            lowPrice = lowPrice == null ? kline.getLow() : lowPrice.min(kline.getLow());
+            volume = volume.add(kline.getVolume());
+            quoteVolume = quoteVolume.add(kline.getTurnover());
+        }
+
+        if (openPrice == null) openPrice = BigDecimal.ZERO;
+        if (lowPrice == null) lowPrice = BigDecimal.ZERO;
+
+        BigDecimal priceChange = closePrice.subtract(openPrice);
+        BigDecimal priceChangePercent = openPrice.signum() == 0 ? BigDecimal.ZERO
+                : priceChange.divide(openPrice, 8, java.math.RoundingMode.HALF_UP)
+                        .multiply(BigDecimal.valueOf(100));
+
+        return new Ticker24h(symbol, closePrice, priceChange, priceChangePercent,
+                highPrice, lowPrice, volume, quoteVolume, openTime, now);
+    }
 }
