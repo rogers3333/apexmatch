@@ -64,7 +64,9 @@ public class KlineServiceImpl implements KlineService {
     @Override
     public Kline getLatest(String symbol, String interval) {
         LinkedList<Kline> klines = store.get(symbol + ":" + interval);
-        if (klines == null || klines.isEmpty()) return null;
+        if (klines == null || klines.isEmpty()) {
+            return null;
+        }
         synchronized (klines) {
             return klines.getLast();
         }

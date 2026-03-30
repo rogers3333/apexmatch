@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * 持仓服务内存实现。
@@ -30,9 +31,14 @@ public class PositionServiceImpl implements PositionService {
     private static final MathContext MC = new MathContext(18, RM);
 
     private final ConcurrentHashMap<String, Position> positions = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ReentrantReadWriteLock> locks = new ConcurrentHashMap<>();
 
     private String key(long userId, String symbol) {
         return userId + ":" + symbol;
+    }
+
+    private ReentrantReadWriteLock lockFor(String key) {
+        return locks.computeIfAbsent(key, k -> new ReentrantReadWriteLock());
     }
 
     @Override
@@ -55,18 +61,25 @@ public class PositionServiceImpl implements PositionService {
     }
 
     @Override
-    public synchronized void updateOnTrade(long userId, String symbol, OrderSide side,
+    public void updateOnTrade(long userId, String symbol, OrderSide side,
                                            BigDecimal qty, BigDecimal price, int leverage) {
-        Position pos = getOrCreatePosition(userId, symbol);
-        pos.setLeverage(leverage);
+        String k = key(userId, symbol);
+        ReentrantReadWriteLock lock = lockFor(k);
+        lock.writeLock().lock();
+        try {
+            Position pos = getOrCreatePosition(userId, symbol);
+            pos.setLeverage(leverage);
 
-        if (pos.getPositionMode() == PositionMode.ONE_WAY) {
-            updateOneWay(pos, side, qty, price);
-        } else {
-            updateHedge(pos, side, qty, price);
+            if (pos.getPositionMode() == PositionMode.ONE_WAY) {
+                updateOneWay(pos, side, qty, price);
+            } else {
+                updateHedge(pos, side, qty, price);
+            }
+            log.debug("持仓更新 userId={} symbol={} qty={} entryLong={} entryShort={}",
+                    userId, symbol, pos.getQuantity(), pos.getLongEntryPrice(), pos.getShortEntryPrice());
+        } finally {
+            lock.writeLock().unlock();
         }
-        log.debug("持仓更新 userId={} symbol={} qty={} entryLong={} entryShort={}",
-                userId, symbol, pos.getQuantity(), pos.getLongEntryPrice(), pos.getShortEntryPrice());
     }
 
     /**
