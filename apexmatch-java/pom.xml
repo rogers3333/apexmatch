@@ -28,6 +28,7 @@
         <module>apexmatch-aml</module>
         <module>apexmatch-otc</module>
         <module>apexmatch-agent</module>
+        <module>apexmatch-wealth</module>
     </modules>
 
     <properties>
