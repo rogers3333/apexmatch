@@ -287,7 +287,7 @@ if (difference.compareTo(BigDecimal.ZERO) != 0) {
 | Spring Boot | 3.x | 3.2.5 | ✅ |
 | Netty | 4.x | 4.x | ✅ |
 | Disruptor | 3.x | 4.0.0 | ✅ |
-| Kafka | 3.x | - | ⏳ 待集成 |
+| Kafka | 3.x | - | ✅ 已集成 |
 | MySQL | 8.0 | 8.3.0 | ✅ |
 | Redis | 7.x | - | ⏳ 待集成 |
 | ZGC | JDK 17 | 支持 | ✅ |
@@ -345,10 +345,10 @@ if (difference.compareTo(BigDecimal.ZERO) != 0) {
    - ⏳ 实现性能测试用例
    - ⏳ 实现安全测试用例
 
-3. **集成 Kafka**
-   - 订单事件溯源
-   - 行情推送
-   - 跨服务通信
+3. ~~**集成 Kafka**~~ ✅ 已完成
+   - ✅ 订单事件溯源
+   - ✅ 行情推送
+   - ✅ 跨服务通信
 
 4. **集成 Redis**
    - 用户余额缓存
@@ -400,7 +400,8 @@ if (difference.compareTo(BigDecimal.ZERO) != 0) {
 **待完成工作**：
 - ✅ 风控引擎增强功能
 - ✅ 完整测试用例实现
-- ⏳ Kafka/Redis 集成
+- ✅ Kafka 事件溯源集成
+- ⏳ Redis 缓存层集成
 - ⏳ 监控告警完善
 
 系统已具备生产级合约交易平台的核心能力，可支持永续合约和交割合约的完整交易流程。
