@@ -25,6 +25,7 @@
         <module>apexmatch-gateway</module>
         <module>apexmatch-fund-chain</module>
         <module>apexmatch-blockchain</module>
+        <module>apexmatch-aml</module>
     </modules>
 
     <properties>
