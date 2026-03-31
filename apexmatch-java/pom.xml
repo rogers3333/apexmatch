@@ -29,6 +29,7 @@
         <module>apexmatch-otc</module>
         <module>apexmatch-agent</module>
         <module>apexmatch-wealth</module>
+        <module>apexmatch-dex-aggregator</module>
     </modules>
 
     <properties>
