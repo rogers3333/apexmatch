@@ -27,6 +27,7 @@
         <module>apexmatch-blockchain</module>
         <module>apexmatch-aml</module>
         <module>apexmatch-otc</module>
+        <module>apexmatch-agent</module>
     </modules>
 
     <properties>

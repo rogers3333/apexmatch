@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.apexmatch</groupId>
+        <artifactId>apexmatch-java</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>apexmatch-agent</artifactId>
+    <name>ApexMatch Agent</name>
+    <description>代理返佣模块 - 代理商管理、返佣规则、佣金结算</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.apexmatch</groupId>
+            <artifactId>apexmatch-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.apexmatch</groupId>
+            <artifactId>apexmatch-account</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.apexmatch</groupId>
+            <artifactId>apexmatch-settlement</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
